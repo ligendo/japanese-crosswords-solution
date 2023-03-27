@@ -1,0 +1,47 @@
+from itertools import product
+
+# Функция проверки условий в строке или столбце
+def check_line(line, condition):
+    current_count = 0
+    for cell in line:
+        if cell == '⬛️':
+            current_count += 1
+        elif current_count > 0:
+            if current_count != condition.pop(0):
+                return False
+            current_count = 0
+    if current_count > 0:
+        if current_count != condition.pop(0):
+            return False
+    elif condition:
+        return False
+    return True
+
+# Запрашиваем условия кроссворда у пользователя
+rows = int(input("Введите количество строк: "))
+cols = int(input("Введите количество столбцов: "))
+row_conditions = []
+for i in range(rows):
+    condition = input(f"Введите условие для строки {i+1}: ").split()
+    condition = [int(c) for c in condition if c.isdigit()]
+    row_conditions.append(condition)
+col_conditions = []
+for i in range(cols):
+    condition = input(f"Введите условие для столбца {i+1}: ").split()
+    condition = [int(c) for c in condition if c.isdigit()]
+    col_conditions.append(condition)
+
+# Перебираем все возможные комбинации
+for combination in product('⬛️ ', repeat=rows*cols):
+    # Разбиваем комбинацию на строки
+    grid = [combination[i:i+cols] for i in range(0, len(combination), cols)]
+    # Проверяем условия в каждой строке
+    if all(check_line(line, row_conditions[i]) for i, line in enumerate(grid)):
+        # Транспонируем матрицу для проверки условий в столбцах
+        transposed_grid = list(map(list, zip(*grid)))
+        # Проверяем условия в каждом столбце
+        if all(check_line(col, col_conditions[i]) for i, col in enumerate(transposed_grid)):
+            # Выводим решение на экран
+            for line in grid:
+                print(' '.join(line))
+            break
