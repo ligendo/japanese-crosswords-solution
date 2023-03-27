@@ -1,0 +1,54 @@
+import pandas as pd
+
+# Чтение файла Excel с условиями кроссворда
+df = pd.read_excel('conditions.xlsx')
+
+# Получение размера таблицы
+rows, cols = df.shape
+
+# Создание пустого решения
+solution = [[' ' for j in range(cols)] for i in range(rows)]
+
+# Функция проверки корректности строки
+def check_row(row_num):
+    condition = list(df.iloc[row_num, :].dropna())
+    cells = solution[row_num]
+    cells_joined = ''.join(cells)
+    for c in condition:
+        if str(c) not in cells_joined:
+            return False
+        cells_joined = cells_joined.replace(str(c), '', 1)
+    return len(cells_joined.strip()) == 0
+
+# Функция проверки корректности столбца
+def check_col(col_num):
+    condition = list(df.iloc[:, col_num].dropna())
+    cells = [solution[i][col_num] for i in range(rows)]
+    cells_joined = ''.join(cells)
+    for c in condition:
+        if str(c) not in cells_joined:
+            return False
+        cells_joined = cells_joined.replace(str(c), '', 1)
+    return len(cells_joined.strip()) == 0
+
+# Функция решения кроссворда
+def solve():
+    global solution
+    for i in range(rows):
+        for j in range(cols):
+            if df.iloc[i, j] == 1:
+                solution[i][j] = '⬛️'
+    while any(' ' in row for row in solution):
+        for i in range(rows):
+            for j in range(cols):
+                if solution[i][j] == ' ':
+                    solution[i][j] = '⬛️' if check_row(i) and check_col(j) else ' '
+    
+# Решение кроссворда
+solve()
+
+# Сохранение решения в новый файл Excel
+df_solution = pd.DataFrame(solution)
+writer = pd.ExcelWriter('solution.xlsx', engine='xlsxwriter')
+df_solution.to_excel(writer, sheet_name='Sheet1', header=False, index=False)
+writer.save()
